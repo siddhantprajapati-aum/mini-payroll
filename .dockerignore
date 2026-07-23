@@ -1,0 +1,12 @@
+.git
+.idea
+**/target
+**/node_modules
+**/dist
+**/.angular
+**/.vscode
+**/HELP.md
+**/*.md
+!README.md
+frontend/.editorconfig
+backend/.idea

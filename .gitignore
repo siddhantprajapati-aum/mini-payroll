@@ -1,0 +1,37 @@
+# Root monorepo ignores
+
+# Secrets / local env (never commit)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backend (Maven)
+backend/target/
+backend/.idea/
+
+# Frontend (Angular/Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/out-tsc/
+
+# Logs / temp
+*.log
+*.tmp
+.cache/

@@ -1,0 +1,171 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>Leave</h1>
+      <p>Apply for leave and approve or reject requests. Weekends are for daily wage employees only.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert--error" role="alert">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="alert alert--success" role="status">{{ success() }}</div>
+  }
+
+  @if (employees().length === 0 && !error()) {
+    <div class="alert alert--error" role="status">
+      No employees found. Create an employee first.
+    </div>
+  }
+
+  <div class="page__grid">
+    <form class="panel" [formGroup]="form" (ngSubmit)="submit()">
+      <h2>Apply leave</h2>
+
+      <label>
+        <span>Employee</span>
+        <select formControlName="employeeId">
+          <option value="" disabled>Select employee</option>
+          @for (employee of employees(); track employee.id) {
+            <option [value]="employee.id">
+              {{ employee.name }} · {{ employee.salaryType }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Start date</span>
+        <input
+          type="date"
+          [min]="today"
+          formControlName="startDate"
+          [class.input--blocked]="!!startNotice() && !allowsWeekendsForSelected()"
+          [class.input--weekend-ok]="!!startNotice() && allowsWeekendsForSelected()"
+        />
+        @if (startNotice()) {
+          <div
+            class="date-callout"
+            [class.date-callout--blocked]="!allowsWeekendsForSelected()"
+            [class.date-callout--allowed]="allowsWeekendsForSelected()"
+            role="status"
+          >
+            {{ startNotice() }}
+          </div>
+        }
+      </label>
+
+      <label>
+        <span>End date</span>
+        <input
+          type="date"
+          [min]="today"
+          formControlName="endDate"
+          [class.input--blocked]="!!endNotice() && !allowsWeekendsForSelected()"
+          [class.input--weekend-ok]="!!endNotice() && allowsWeekendsForSelected()"
+        />
+        @if (endNotice()) {
+          <div
+            class="date-callout"
+            [class.date-callout--blocked]="!allowsWeekendsForSelected()"
+            [class.date-callout--allowed]="allowsWeekendsForSelected()"
+            role="status"
+          >
+            {{ endNotice() }}
+          </div>
+        }
+      </label>
+
+      <label>
+        <span>Reason</span>
+        <textarea rows="3" formControlName="reason" placeholder="Why is leave needed?"></textarea>
+      </label>
+
+      <button
+        type="submit"
+        class="btn btn--primary btn--submit"
+        [disabled]="saving() || employees().length === 0"
+      >
+        {{ saving() ? 'Submitting…' : 'Apply leave' }}
+      </button>
+    </form>
+
+    <div class="panel panel--wide">
+      <div class="panel__row">
+        <h2>Leave requests</h2>
+        <button type="button" class="btn btn--ghost" (click)="loadLeaves()" [disabled]="loading()">
+          Refresh
+        </button>
+      </div>
+
+      @if (loading()) {
+        <p class="muted">Loading leave requests…</p>
+      } @else if (leaves().length === 0) {
+        <p class="muted">No leave requests yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Dates</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (leave of leaves(); track leave.id) {
+                <tr>
+                  <td>
+                    {{ leave.employee.name || '—' }}
+                    <span class="chip">{{ leave.employee.salaryType }}</span>
+                  </td>
+                  <td>
+                    {{ leave.startDate | date:'mediumDate' }}
+                    –
+                    {{ leave.endDate | date:'mediumDate' }}
+                  </td>
+                  <td>{{ leave.reason }}</td>
+                  <td>
+                    <span
+                      class="chip"
+                      [class.chip--ok]="leave.status === 'APPROVED'"
+                      [class.chip--warn]="leave.status === 'PENDING'"
+                      [class.chip--danger]="leave.status === 'REJECTED'"
+                    >
+                      {{ leave.status }}
+                    </span>
+                  </td>
+                  <td class="actions">
+                    @if (leave.status === 'PENDING') {
+                      <button
+                        type="button"
+                        class="btn btn--small btn--primary"
+                        [disabled]="updatingId() === leave.id"
+                        (click)="updateStatus(leave.id, 'APPROVED')"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--small btn--ghost"
+                        [disabled]="updatingId() === leave.id"
+                        (click)="updateStatus(leave.id, 'REJECTED')"
+                      >
+                        Reject
+                      </button>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</section>

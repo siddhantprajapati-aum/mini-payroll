@@ -1,0 +1,95 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>Employees</h1>
+      <p>Add employees and manage their role and salary details.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert--error" role="alert">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="alert alert--success" role="status">{{ success() }}</div>
+  }
+
+  <div class="page__grid">
+    <form class="panel" [formGroup]="form" (ngSubmit)="submit()">
+      <h2>Add employee</h2>
+
+      <label>
+        <span>Name</span>
+        <input type="text" formControlName="name" placeholder="e.g. Priya Sharma" />
+      </label>
+
+      <label>
+        <span>Role</span>
+        <select formControlName="role">
+          @for (role of roles; track role) {
+            <option [value]="role">{{ role }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Salary type</span>
+        <select formControlName="salaryType">
+          @for (type of salaryTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Salary amount</span>
+        <input type="number" min="0.01" step="0.01" formControlName="salaryAmount" />
+      </label>
+
+      <button type="submit" class="btn btn--primary btn--submit" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Create employee' }}
+      </button>
+    </form>
+
+    <div class="panel panel--wide">
+      <div class="panel__row">
+        <h2>Employee list</h2>
+        <button type="button" class="btn btn--ghost" (click)="loadEmployees()" [disabled]="loading()">
+          Refresh
+        </button>
+      </div>
+
+      @if (loading()) {
+        <p class="muted">Loading employees…</p>
+      } @else if (employees().length === 0) {
+        <p class="muted">No employees yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Salary type</th>
+                <th>Amount</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (employee of employees(); track employee.id) {
+                <tr>
+                  <td>{{ employee.id }}</td>
+                  <td>{{ employee.name }}</td>
+                  <td><span class="chip">{{ employee.role }}</span></td>
+                  <td>{{ employee.salaryType }}</td>
+                  <td>{{ employee.salaryAmount | currency:'INR':'symbol':'1.0-2' }}</td>
+                  <td>{{ employee.createdAt | date:'mediumDate' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</section>

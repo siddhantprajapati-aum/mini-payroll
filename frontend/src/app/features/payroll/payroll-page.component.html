@@ -1,0 +1,115 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>Payroll</h1>
+      <p>Generate salary for an employee based on attendance in a month.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert--error" role="alert">{{ error() }}</div>
+  }
+
+  @if (employees().length === 0 && !error()) {
+    <div class="alert alert--error" role="status">
+      No employees found. Create an employee first.
+    </div>
+  }
+
+  <div class="page__grid">
+    <form class="panel" [formGroup]="form" (ngSubmit)="submit()">
+      <h2>Generate payroll</h2>
+
+      <label>
+        <span>Employee</span>
+        <select formControlName="employeeId">
+          <option value="" disabled>Select employee</option>
+          @for (employee of employees(); track employee.id) {
+            <option [value]="employee.id">{{ employee.name }} · {{ employee.salaryType }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Year</span>
+        <select formControlName="year">
+          @for (year of years; track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Month</span>
+        <select formControlName="month">
+          @for (month of months; track month) {
+            <option [value]="month">{{ monthLabel(month) }}</option>
+          }
+        </select>
+      </label>
+
+      <button
+        type="submit"
+        class="btn btn--primary btn--submit"
+        [disabled]="loading() || employees().length === 0"
+      >
+        {{ loading() ? 'Calculating…' : 'Generate payroll' }}
+      </button>
+    </form>
+
+    <div class="panel panel--wide">
+      <h2>Salary breakdown</h2>
+
+      @if (loading()) {
+        <p class="muted">Calculating payroll…</p>
+      } @else if (!payroll()) {
+        <p class="muted">Select an employee and period to generate payroll.</p>
+      } @else {
+        <div class="breakdown">
+          <div class="breakdown__hero">
+            <p class="breakdown__label">Calculated salary</p>
+            <p class="breakdown__amount">
+              {{ payroll()!.calculatedSalary | currency:'INR':'symbol':'1.0-2' }}
+            </p>
+            <p class="breakdown__formula">{{ payroll()!.formula }}</p>
+          </div>
+
+          <dl class="breakdown__grid">
+            <div>
+              <dt>Employee</dt>
+              <dd>{{ payroll()!.employeeName }}</dd>
+            </div>
+            <div>
+              <dt>Period</dt>
+              <dd>{{ monthLabel(payroll()!.month) }} {{ payroll()!.year }}</dd>
+            </div>
+            <div>
+              <dt>Salary type</dt>
+              <dd>{{ payroll()!.salaryType }}</dd>
+            </div>
+            <div>
+              <dt>Base amount</dt>
+              <dd>{{ payroll()!.baseSalaryAmount | currency:'INR':'symbol':'1.0-2' }}</dd>
+            </div>
+            <div>
+              <dt>Working days</dt>
+              <dd>{{ payroll()!.workingDays }}</dd>
+            </div>
+            <div>
+              <dt>Present days</dt>
+              <dd>{{ payroll()!.presentDays }}</dd>
+            </div>
+            <div>
+              <dt>Absent days</dt>
+              <dd>{{ payroll()!.absentDays }}</dd>
+            </div>
+            <div>
+              <dt>Unmarked days</dt>
+              <dd>{{ payroll()!.unmarkedDays }}</dd>
+            </div>
+          </dl>
+        </div>
+      }
+    </div>
+  </div>
+</section>

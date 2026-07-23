@@ -1,0 +1,190 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>Attendance</h1>
+      <p>Mark daily or bulk attendance. Weekends are allowed only for daily wage employees.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert--error" role="alert">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="alert alert--success" role="status">{{ success() }}</div>
+  }
+
+  @if (employees().length === 0 && !error()) {
+    <div class="alert alert--error" role="status">
+      No employees found. Create an employee first.
+    </div>
+  }
+
+  <div class="page__grid">
+    <div class="page__forms">
+      <form class="panel" [formGroup]="form" (ngSubmit)="submit()">
+        <h2>Mark attendance</h2>
+
+        <label>
+          <span>Employee</span>
+          <select formControlName="employeeId">
+            <option value="" disabled>Select employee</option>
+            @for (employee of employees(); track employee.id) {
+              <option [value]="employee.id">
+                {{ employee.name }} · {{ employee.salaryType }}
+              </option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Date</span>
+          <input
+            type="date"
+            [max]="today"
+            formControlName="date"
+            [class.input--blocked]="!!dateNotice() && !allowsWeekendsForSelected()"
+            [class.input--weekend-ok]="!!dateNotice() && allowsWeekendsForSelected()"
+          />
+          @if (dateNotice()) {
+            <div
+              class="date-callout"
+              [class.date-callout--blocked]="!allowsWeekendsForSelected()"
+              [class.date-callout--allowed]="allowsWeekendsForSelected()"
+              role="status"
+            >
+              {{ dateNotice() }}
+            </div>
+          }
+        </label>
+
+        <label>
+          <span>Status</span>
+          <select formControlName="status">
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Remarks (optional)</span>
+          <input type="text" formControlName="remarks" placeholder="Optional note" />
+        </label>
+
+        <button
+          type="submit"
+          class="btn btn--primary btn--submit"
+          [disabled]="saving() || employees().length === 0"
+        >
+          {{ saving() ? 'Saving…' : 'Mark attendance' }}
+        </button>
+      </form>
+
+      <form class="panel" [formGroup]="bulkForm" (ngSubmit)="submitBulk()">
+        <h2>Bulk mark attendance</h2>
+        <p class="panel__hint">Applies one status across a date range.</p>
+
+        <label>
+          <span>Employee</span>
+          <select formControlName="employeeId">
+            <option value="" disabled>Select employee</option>
+            @for (employee of employees(); track employee.id) {
+              <option [value]="employee.id">
+                {{ employee.name }} · {{ employee.salaryType }}
+              </option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Start date</span>
+          <input type="date" [max]="today" formControlName="startDate" />
+        </label>
+
+        <label>
+          <span>End date</span>
+          <input type="date" [max]="today" formControlName="endDate" />
+          @if (bulkNotice()) {
+            <div
+              class="date-callout"
+              [class.date-callout--allowed]="allowsWeekendsForSelected(true)"
+              [class.date-callout--info]="!allowsWeekendsForSelected(true) && !bulkNotice()!.includes('weekend')"
+              [class.date-callout--blocked]="bulkNotice()!.includes('weekend')"
+              role="status"
+            >
+              {{ bulkNotice() }}
+            </div>
+          }
+        </label>
+
+        <label>
+          <span>Status</span>
+          <select formControlName="status">
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Remarks (optional)</span>
+          <input type="text" formControlName="remarks" placeholder="Applied to included days" />
+        </label>
+
+        <button
+          type="submit"
+          class="btn btn--primary btn--submit"
+          [disabled]="bulkSaving() || employees().length === 0"
+        >
+          {{ bulkSaving() ? 'Saving…' : 'Save bulk attendance' }}
+        </button>
+      </form>
+    </div>
+
+    <div class="panel panel--wide">
+      <h2>Attendance history</h2>
+
+      @if (!form.controls.employeeId.value) {
+        <p class="muted">Select an employee to view history.</p>
+      } @else if (loading()) {
+        <p class="muted">Loading attendance…</p>
+      } @else if (history().length === 0) {
+        <p class="muted">No attendance records for this employee yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of history(); track row.id) {
+                <tr>
+                  <td>
+                    {{ row.date | date:'mediumDate' }}
+                    @if (isWeekendDate(row.date)) {
+                      <span class="chip chip--warn">Weekend</span>
+                    }
+                  </td>
+                  <td>
+                    <span
+                      class="chip"
+                      [class.chip--ok]="row.status === 'PRESENT'"
+                      [class.chip--warn]="row.status === 'ABSENT'"
+                    >
+                      {{ row.status }}
+                    </span>
+                  </td>
+                  <td>{{ row.remarks || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</section>
